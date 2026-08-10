@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mercado ERP
 
-## Getting Started
+ERP operativo para un supermercado de barrio: POS, inventario, finanzas y consultas de negocio por WhatsApp. Está creado con Next.js App Router, TypeScript, Supabase Auth/PostgreSQL y listo para Vercel.
 
-First, run the development server:
+## Funcionalidades
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Autenticación Supabase y roles `admin` / `cashier`.
+- POS con búsqueda por SKU o nombre, carrito, kg con decimales, efectivo, cambio y comprobación de stock.
+- Venta atómica mediante PostgreSQL RPC: venta, partidas, descuento de stock y movimiento ocurren en una transacción.
+- Inventario, stock bajo, ajustes administrados e importación CSV por SKU.
+- Finanzas: ventas, gastos y flujo mensual.
+- Dashboard de administración y endpoints IA/WhatsApp con consultas controladas, sin SQL arbitrario.
+
+## Arquitectura
+
+```mermaid
+flowchart TD
+  U[Usuario] --> N[Next.js]
+  N --> S[Supabase Auth]
+  N --> P[(PostgreSQL)]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```mermaid
+flowchart TD
+  W[WhatsApp] --> H[Webhook Next.js]
+  H --> A[Agente con herramientas]
+  A --> P[Supabase]
+  P --> A --> W
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Instalación
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+copy .env.example .env.local
+npm run dev
+```
 
-## Learn More
+Configura `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. `SUPABASE_SERVICE_ROLE_KEY` es exclusivamente para rutas de servidor (`/api/ai` y `/api/whatsapp`), nunca se expone al navegador.
 
-To learn more about Next.js, take a look at the following resources:
+## Supabase y base de datos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Crea un proyecto en Supabase.
+2. Abre SQL Editor y ejecuta, en orden, `001_initial_schema.sql`, `002_security_and_profile_fixes.sql` y `003_inventory_adjustment_validation.sql`.
+3. En **Authentication > Users**, crea `admin@supermercado.demo` y `cajero@supermercado.demo` con contraseñas exclusivas de tu entorno demo. El trigger crea automáticamente sus perfiles como cajero.
+4. Obtén el UUID del administrador y ejecuta la sentencia comentada correspondiente en `supabase/seed.sql`; después ejecuta el resto del archivo para datos iniciales.
+5. Copia URL, Publishable key y, solo en `.env.local`/Vercel, Service Role key.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Las políticas RLS limitan las escrituras de productos y gastos a administradores. `complete_sale` valida existencias y bloquea los productos dentro de la transacción; así evita ventas parciales y stock negativo.
 
-## Deploy on Vercel
+## Importación CSV
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+En Inventario, como administrador, selecciona un CSV con encabezados exactos:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+sku,producto,categoria,unidad,precio,stock
+FV-001,Tomate saladet,Frutas y Verduras,kg,28.50,120
+```
+
+Se hace `upsert` por SKU. Un CSV con comas dentro de campos debe exportarse sin comillas o normalizarse antes; el importador está deliberadamente ligero para el catálogo operativo especificado.
+
+## IA y WhatsApp
+
+`POST /api/ai` acepta `{ "question": "¿Cuánto vendimos hoy?" }` y requiere el JWT Bearer de un administrador. El clasificador usa sólo funciones de consulta acotadas para ventas, stock, bajos, gastos y flujo; nunca ejecuta SQL del usuario ni inventa resultados.
+
+La primera integración es Twilio WhatsApp Sandbox. Añade las variables `TWILIO_*` de `.env.example`, configura el webhook entrante del Sandbox a `https://TU-DOMINIO/api/whatsapp` (POST) y vincula tu número enviando el código de unión de Twilio. El webhook valida la firma `X-Twilio-Signature`. El proveedor está aislado en `src/lib/whatsapp/provider.ts`, por lo que Meta o Green API se pueden añadir implementando la misma interfaz.
+
+`AI_PROVIDER_*` queda reservado para conectar un modelo de clasificación/respuesta; la ruta actual es determinista y segura para el conjunto de preguntas de negocio.
+
+## Despliegue Vercel
+
+1. Sube el repositorio a GitHub.
+2. Importa el repositorio en Vercel.
+3. Agrega las variables de `.env.example` en Project Settings.
+4. Despliega y actualiza la URL del webhook Twilio.
+
+## Calidad y decisiones
+
+Ejecuta `npm run lint` y `npm run build`. La precisión de stock se conserva a tres decimales; cada línea y total se redondean a dos decimales para cobro. La operación crítica vive en PostgreSQL, no en el cliente. La interfaz usa componentes ligeros y CSS propio para conservar velocidad y explicabilidad.
+
+Limitaciones deliberadas: no incluye facturación fiscal ni impresora física dedicada. El ticket puede imprimirse con el diálogo nativo del navegador. Antes de entregar verifica login de ambos roles, venta de `0.75 kg` de tomate, bloqueo por falta de stock, gasto eléctrico, CSV y pregunta WhatsApp.
+
+## Prueba rápida del sistema
+
+1. Inicia sesión con el administrador y abre **Inventario**.
+2. Importa un CSV con los encabezados requeridos; verifica el resumen de procesados, insertados, actualizados y errores.
+3. Edita un producto y confirma que SKU permanece bloqueado; ajusta inventario con el modal.
+4. Revisa la pestaña **Movimientos** y confirma fecha, usuario y stock anterior/nuevo.
+5. En POS vende `0.750 kg` de Tomate saladet a $28.50; el ticket debe mostrar $21.38 y el stock bajar de 120 a 119.25.
+6. Confirma que una cantidad mayor al stock, cero o una fracción de un producto por pieza se bloquea.
+7. En **Finanzas**, registra un gasto de electricidad de $1,500 y comprueba egresos y flujo.
+8. Cambia el selector de Top productos entre Hoy, Semana y Mes.
+9. Inicia sesión como cajero: `/finanzas` debe redirigir a POS y no deben aparecer botones de edición o ajuste.
+10. Con JWT de administrador consulta `/api/ai`; prueba ventas, stock, top productos, gastos y flujo. Sin resultados debe responder “No encontré datos para esa consulta.”
+11. Configura Twilio Sandbox y comprueba que una llamada sin firma válida devuelve 401 y una llamada real recibe respuesta.
