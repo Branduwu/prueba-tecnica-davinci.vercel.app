@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
+import { config as loadEnvironment } from 'dotenv'
 
+loadEnvironment({ path: '.env.test.local' })
 const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000'
 
 export default defineConfig({

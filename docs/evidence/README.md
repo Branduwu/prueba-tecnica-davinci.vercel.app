@@ -4,7 +4,7 @@ La demostración visual se genera con Playwright en Chromium, video habilitado, 
 
 ## Ejecución
 
-1. Configura localmente `E2E_BASE_URL`, `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_CASHIER_EMAIL` y `E2E_CASHIER_PASSWORD`.
+1. Crea `.env.test.local` (ignorado por Git) y configura `E2E_BASE_URL`, `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_CASHIER_EMAIL` y `E2E_CASHIER_PASSWORD`. Playwright lo carga automáticamente.
 2. Instala Chromium: `npx playwright install chromium`.
 3. Ejecuta `npm run test:e2e:demo`. Al pasar, recopila el video en `videos/erp-e2e-demo.webm` y crea `videos/erp-e2e-demo.srt`.
 4. Consulta el reporte con `npm run test:e2e:report`.
