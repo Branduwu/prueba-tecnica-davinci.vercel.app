@@ -57,7 +57,7 @@ sku,producto,categoria,unidad,precio,stock
 FV-001,Tomate saladet,Frutas y Verduras,kg,28.50,120
 ```
 
-Se hace `upsert` por SKU. Un CSV con comas dentro de campos debe exportarse sin comillas o normalizarse antes; el importador está deliberadamente ligero para el catálogo operativo especificado.
+El catálogo completo se entrega en `data/productos_supermercado.csv` con 100 productos. Se hace `upsert` por SKU, por lo que una segunda importación actualiza los existentes sin duplicarlos. El parser Papa Parse admite valores CSV entrecomillados, incluidos nombres que contienen comas.
 
 ## IA y WhatsApp
 
