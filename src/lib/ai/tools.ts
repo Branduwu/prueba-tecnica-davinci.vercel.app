@@ -4,8 +4,8 @@ const start=(period:'today'|'week'|'month')=>period==='today'?new Date().toISOSt
 const noData='No encontré datos para esa consulta.'
 export async function answerBusinessQuestion(question:string){
  const q=question.toLowerCase(),db=createAdminClient()
- if(/stock|inventario/.test(q)&&!/poco/.test(q)){const words=q.replace(/cuánto|cuanto|stock|queda|de|el|la|hay|\?/g,' ').trim();const {data,error}=await db.from('products').select('name,stock,unit').ilike('name',`%${words}%`).limit(1);return !error&&data?.[0]?`${data[0].name}: ${data[0].stock} ${data[0].unit} disponibles.`:noData}
  if(/poco|bajo/.test(q)){const {data,error}=await db.from('products').select('name,stock,unit').filter('stock','lte','low_stock_threshold');if(error)return noData;return data?.length?`Inventario bajo: ${data.map(x=>`${x.name} (${x.stock} ${x.unit})`).join(', ')}.`:'No hay productos con stock bajo.'}
+ if(/stock|inventario/.test(q)){const words=q.replace(/cuánto|cuanto|stock|queda|de|el|la|hay|\?/g,' ').trim();const {data,error}=await db.from('products').select('name,stock,unit').ilike('name',`%${words}%`).limit(1);return !error&&data?.[0]?`${data[0].name}: ${data[0].stock} ${data[0].unit} disponibles.`:noData}
  const period=/hoy/.test(q)?'today':/semana/.test(q)?'week':'month'
  if(/gast/.test(q)){const {data,error}=await db.from('expenses').select('amount').gte('expense_date',start(period));if(error||!data?.length)return noData;return `Gastos del periodo: ${money(data.reduce((a,x)=>a+Number(x.amount),0))}.`}
  const {data:sales,error:salesError}=await db.from('sales').select('id,total').gte('created_at',start(period));if(salesError)return noData
