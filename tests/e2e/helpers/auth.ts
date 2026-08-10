@@ -5,7 +5,13 @@ export async function login(page: Page, email: string, password: string, destina
   await page.getByLabel('Correo').fill(email)
   await page.getByLabel('Contraseña').fill(password)
   await page.getByRole('button', { name: 'Entrar al sistema' }).click()
-  await expect(page).toHaveURL(destination)
+  const loginError = page.locator('.error')
+  await Promise.race([
+    expect(page).toHaveURL(destination),
+    expect(loginError).toBeVisible().then(async () => {
+      throw new Error(`Supabase rechazó el inicio de sesión: ${await loginError.textContent()}`)
+    }),
+  ])
 }
 
 export async function logout(page: Page) {

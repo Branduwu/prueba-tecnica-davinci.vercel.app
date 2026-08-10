@@ -4,10 +4,13 @@ import { login, logout } from './helpers/auth'
 import { screenshot, showCaption } from './helpers/captions'
 
 const required = ['E2E_ADMIN_EMAIL', 'E2E_ADMIN_PASSWORD', 'E2E_CASHIER_EMAIL', 'E2E_CASHIER_PASSWORD', 'E2E_SUPABASE_URL', 'E2E_SUPABASE_PUBLISHABLE_KEY'] as const
-const missing = required.filter((name) => !process.env[name])
+const invalidEnvironment = required.filter((name) => {
+  const value = process.env[name]
+  return !value || /TU_|your-|PASSWORD_(ADMIN|CAJERO)_DEMO/.test(value)
+})
 
 test.describe('Demostración visual E2E del ERP', () => {
-  test.skip(missing.length > 0, `Faltan variables E2E: ${missing.join(', ')}`)
+  test.skip(invalidEnvironment.length > 0, `Faltan o son marcadores las variables E2E: ${invalidEnvironment.join(', ')}`)
 
   test('recorre administración, POS, inventario, finanzas, roles y agente', async ({ page, request }) => {
     const adminEmail = process.env.E2E_ADMIN_EMAIL!
