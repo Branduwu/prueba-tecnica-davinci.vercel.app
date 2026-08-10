@@ -63,7 +63,14 @@ El catálogo completo se entrega en `data/productos_supermercado.csv` con 100 pr
 
 `POST /api/ai` acepta `{ "question": "¿Cuánto vendimos hoy?" }` y requiere el JWT Bearer de un administrador. El clasificador usa sólo funciones de consulta acotadas para ventas, stock, bajos, gastos y flujo; nunca ejecuta SQL del usuario ni inventa resultados.
 
-La primera integración es Twilio WhatsApp Sandbox. Añade las variables `TWILIO_*` de `.env.example`, configura el webhook entrante del Sandbox a `https://TU-DOMINIO/api/whatsapp` (POST) y vincula tu número enviando el código de unión de Twilio. El webhook valida la firma `X-Twilio-Signature`. El proveedor está aislado en `src/lib/whatsapp/provider.ts`, por lo que Meta o Green API se pueden añadir implementando la misma interfaz.
+La primera integración es Twilio WhatsApp Sandbox. Configura en `.env.local` o Vercel, exclusivamente como variables de servidor:
+
+- `TWILIO_ACCOUNT_SID`: Account SID en Twilio Console.
+- `TWILIO_AUTH_TOKEN`: Auth Token en Twilio Console; nunca lo expongas ni lo subas a Git.
+- `TWILIO_WHATSAPP_FROM`: número Sandbox mostrado por Twilio, con formato `whatsapp:+...`.
+- `TWILIO_WHATSAPP_TO`: número de prueba vinculado al Sandbox, con formato `whatsapp:+...`; se conserva para pruebas manuales. Las respuestas del webhook se dirigen al remitente real del mensaje entrante.
+
+En **Twilio Console → Messaging → Try it out → Send a WhatsApp message → Sandbox settings**, coloca como **When a message comes in** (método POST): `https://TU_DOMINIO_DE_VERCEL/api/whatsapp`. Vincula tu número enviando al Sandbox el código `join` que Twilio muestra. El webhook valida `X-Twilio-Signature` contra la URL pública exacta y rechaza firmas ausentes o inválidas. El proveedor está aislado en `src/lib/whatsapp/provider.ts`, por lo que Meta o Green API se pueden añadir implementando la misma interfaz.
 
 `AI_PROVIDER_*` queda reservado para conectar un modelo de clasificación/respuesta; la ruta actual es determinista y segura para el conjunto de preguntas de negocio.
 
