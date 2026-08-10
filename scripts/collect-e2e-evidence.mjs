@@ -18,19 +18,22 @@ if (!video) {
   console.log('E2E omitido o sin video: no se generó evidencia para recopilar.')
   process.exit(0)
 }
+
 await mkdir('docs/evidence/videos', { recursive: true })
 await copyFile(video, 'docs/evidence/videos/erp-e2e-demo.webm')
 
 const captions = [
-  ['00:00:00,000', '00:00:03,000', 'ERP SUPERMERCADO — Validación automatizada End-to-End'],
-  ['00:00:03,000', '00:00:10,000', 'Autenticación y dashboard de administrador'],
-  ['00:00:10,000', '00:00:22,000', 'Inventario: búsqueda, edición y ajuste controlado'],
-  ['00:00:22,000', '00:00:38,000', 'POS: venta por peso, cobro y ticket'],
-  ['00:00:38,000', '00:00:50,000', 'Inventario: movimiento y descuento automático'],
-  ['00:00:50,000', '00:01:04,000', 'Finanzas: indicadores, gasto y top productos'],
-  ['00:01:04,000', '00:01:16,000', 'Roles: restricciones de cajero'],
-  ['00:01:16,000', '00:01:28,000', 'Agente IA: consulta con datos reales'],
-  ['00:01:28,000', '00:01:32,000', 'Validación E2E completada — WhatsApp requiere Sandbox externo'],
+  ['00:00:00,000', '00:00:04,000', 'ERP SUPERMERCADO — validación E2E en entorno local'],
+  ['00:00:04,000', '00:00:10,000', 'Next.js + Supabase Local + PostgreSQL: autenticación de administrador'],
+  ['00:00:10,000', '00:00:19,000', 'Dashboard e inventario: catálogo real de 100 productos y ajuste transaccional'],
+  ['00:00:19,000', '00:00:30,000', 'POS: venta por peso, cobro, cambio y ticket'],
+  ['00:00:30,000', '00:00:37,000', 'PostgreSQL: venta, descuento de stock e inventory movements'],
+  ['00:00:37,000', '00:00:44,000', 'Finanzas: ingresos, gasto, flujo neto y productos más vendidos'],
+  ['00:00:44,000', '00:00:48,000', 'Roles y RLS: cajero sin acceso a Finanzas ni ajustes'],
+  ['00:00:48,000', '00:00:52,000', 'Agente IA: proveedor local E2E con herramientas y datos reales'],
+  ['00:00:52,000', '00:00:54,000', 'WhatsApp: webhook firmado y proveedor externo simulado en E2E local'],
+  ['00:00:54,000', '00:00:55,500', 'Validación E2E completada: Supabase Local real; IA y Twilio simulados'],
 ]
+
 const srt = captions.map(([from, to, text], index) => `${index + 1}\n${from} --> ${to}\n${text}\n`).join('\n')
 await writeFile('docs/evidence/videos/erp-e2e-demo.srt', srt)

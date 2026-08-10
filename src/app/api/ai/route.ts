@@ -1,3 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 import { answerBusinessQuestion } from '@/lib/ai/tools'
-export async function POST(request:Request){const token=request.headers.get('authorization')?.replace(/^Bearer\s+/i,'');if(!token)return Response.json({error:'No autorizado'},{status:401});const db=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,{auth:{persistSession:false}});const {data:{user}}=await db.auth.getUser(token);if(!user)return Response.json({error:'No autorizado'},{status:401});const {data:profile}=await db.from('profiles').select('role').eq('id',user.id).single();if(profile?.role!=='admin')return Response.json({error:'No autorizado'},{status:403});const {question}=await request.json() as {question?:string};if(!question)return Response.json({error:'Pregunta requerida'},{status:400});try{return Response.json({answer:await answerBusinessQuestion(question)})}catch{return Response.json({error:'Error interno'},{status:500})}}
+
+export async function POST(request: Request) {
+  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  if (!token) return Response.json({ error: 'No autorizado' }, { status: 401 })
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  })
+  const { data: { user } } = await db.auth.getUser(token)
+  if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return Response.json({ error: 'No autorizado' }, { status: 403 })
+  const { question } = await request.json() as { question?: string }
+  if (!question) return Response.json({ error: 'Pregunta requerida' }, { status: 400 })
+  try {
+    return Response.json({ answer: await answerBusinessQuestion(question) })
+  } catch {
+    return Response.json({ error: 'Error interno' }, { status: 500 })
+  }
+}

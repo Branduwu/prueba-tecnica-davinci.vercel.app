@@ -9,17 +9,24 @@ end; $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
+grant usage on schema public to authenticated, service_role;
+grant select on public.profiles, public.products, public.sales, public.sale_items, public.inventory_movements, public.expenses to authenticated;
+grant insert, update, delete on public.products, public.expenses to authenticated;
+grant all privileges on all tables in schema public to service_role;
+
 create or replace function public.complete_sale(p_items jsonb, p_amount_received numeric)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_user uuid := auth.uid(); v_sale uuid := gen_random_uuid(); v_subtotal numeric := 0; v_total numeric; v_item jsonb; v_product public.products%rowtype; v_qty numeric; v_line numeric;
+declare v_user uuid := auth.uid(); v_sale uuid := gen_random_uuid(); v_subtotal numeric := 0; v_total numeric; v_item jsonb; v_product public.products%rowtype; v_product_id uuid; v_qty numeric; v_line numeric; v_requested jsonb := '{}'::jsonb;
 begin
   if v_user is null then raise exception 'No autenticado'; end if;
   if jsonb_array_length(p_items) = 0 then raise exception 'El carrito está vacío'; end if;
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_qty := (v_item->>'quantity')::numeric;
-    select * into v_product from public.products where id = (v_item->>'product_id')::uuid and active for update;
+    v_product_id := (v_item->>'product_id')::uuid;
+    v_requested := jsonb_set(v_requested, array[v_product_id::text], to_jsonb(coalesce((v_requested->>v_product_id::text)::numeric, 0) + v_qty));
+    select * into v_product from public.products where id = v_product_id and active for update;
     if not found then raise exception 'Producto no disponible'; end if;
-    if v_qty <= 0 or v_qty > v_product.stock then raise exception 'Stock insuficiente para %', v_product.name; end if;
+    if v_qty <= 0 or (v_requested->>v_product_id::text)::numeric > v_product.stock then raise exception 'Stock insuficiente para %', v_product.name; end if;
     if v_product.unit <> 'kg' and trunc(v_qty) <> v_qty then raise exception 'La cantidad de % debe ser entera', v_product.name; end if;
     v_line := round(v_product.price * v_qty, 2); v_subtotal := v_subtotal + v_line;
   end loop;

@@ -51,15 +51,17 @@ create or replace function public.is_admin() returns boolean language sql stable
 
 create or replace function public.complete_sale(p_items jsonb, p_amount_received numeric)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_user uuid := auth.uid(); v_sale uuid := gen_random_uuid(); v_subtotal numeric := 0; v_total numeric; v_item jsonb; v_product public.products%rowtype; v_qty numeric; v_line numeric;
+declare v_user uuid := auth.uid(); v_sale uuid := gen_random_uuid(); v_subtotal numeric := 0; v_total numeric; v_item jsonb; v_product public.products%rowtype; v_product_id uuid; v_qty numeric; v_line numeric; v_requested jsonb := '{}'::jsonb;
 begin
   if v_user is null then raise exception 'No autenticado'; end if;
   if jsonb_array_length(p_items) = 0 then raise exception 'El carrito está vacío'; end if;
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_qty := (v_item->>'quantity')::numeric;
-    select * into v_product from public.products where id = (v_item->>'product_id')::uuid and active for update;
+    v_product_id := (v_item->>'product_id')::uuid;
+    v_requested := jsonb_set(v_requested, array[v_product_id::text], to_jsonb(coalesce((v_requested->>v_product_id::text)::numeric, 0) + v_qty));
+    select * into v_product from public.products where id = v_product_id and active for update;
     if not found then raise exception 'Producto no disponible'; end if;
-    if v_qty <= 0 or v_qty > v_product.stock then raise exception 'Stock insuficiente para %', v_product.name; end if;
+    if v_qty <= 0 or (v_requested->>v_product_id::text)::numeric > v_product.stock then raise exception 'Stock insuficiente para %', v_product.name; end if;
     if v_product.unit <> 'kg' and trunc(v_qty) <> v_qty then raise exception 'La cantidad de % debe ser entera', v_product.name; end if;
     v_line := round(v_product.price * v_qty, 2); v_subtotal := v_subtotal + v_line;
   end loop;
@@ -84,6 +86,10 @@ create policy "sales own or admin" on public.sales for select to authenticated u
 create policy "items own sale" on public.sale_items for select to authenticated using (exists(select 1 from public.sales s where s.id=sale_id and (s.cashier_id=auth.uid() or public.is_admin())));
 create policy "moves read" on public.inventory_movements for select to authenticated using (true);
 create policy "expenses admin" on public.expenses for all to authenticated using (public.is_admin()) with check (public.is_admin());
+grant usage on schema public to authenticated, service_role;
+grant select on public.profiles, public.products, public.sales, public.sale_items, public.inventory_movements, public.expenses to authenticated;
+grant insert, update, delete on public.products, public.expenses to authenticated;
+grant all privileges on all tables in schema public to service_role;
 grant execute on function public.complete_sale(jsonb,numeric) to authenticated;
 
 create or replace function public.adjust_inventory(p_product_id uuid, p_quantity numeric, p_type public.inventory_movement_type, p_reason text)

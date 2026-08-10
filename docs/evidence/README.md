@@ -1,24 +1,42 @@
-# Evidencia E2E
+# Evidencia E2E local
 
-La demostración visual se genera con Playwright en Chromium, video habilitado, screenshots en error y trace en error.
+Esta evidencia se genera automáticamente contra el entorno local reproducible del proyecto. No utiliza Supabase Cloud, Vercel, Twilio Sandbox ni una API externa de IA.
 
 ## Ejecución
 
-1. Crea `.env.test.local` (ignorado por Git) y configura `E2E_BASE_URL`, `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_CASHIER_EMAIL` y `E2E_CASHIER_PASSWORD`. Playwright lo carga automáticamente.
-2. Instala Chromium: `npx playwright install chromium`.
-3. Ejecuta `npm run test:e2e:demo`. Al pasar, recopila el video en `videos/erp-e2e-demo.webm` y crea `videos/erp-e2e-demo.srt`.
-4. Consulta el reporte con `npm run test:e2e:report`.
+1. Instala Docker Desktop y asegúrate de que esté en ejecución.
+2. Instala Chromium una vez: `npx playwright install chromium`.
+3. Ejecuta `npm run e2e:setup`. Inicia Supabase Local, reinicia la base de datos, aplica las migraciones y crea usuarios de demostración locales en un archivo ignorado por Git.
+4. Ejecuta `npm run e2e:demo`. Levanta Next.js, ejecuta Playwright y recopila video, subtítulos y capturas.
+5. Opcionalmente, ejecuta `npm run e2e:teardown` para detener sólo el stack local de Supabase de este proyecto.
+
+Las contraseñas, claves y configuración local se generan en `.env.e2e.local`, que está ignorado por Git. Nunca se deben reutilizar en producción.
 
 ## Resultado de la última ejecución
 
-Pendiente de ejecución con Supabase real y usuarios demo. No se incluyen videos, screenshots ni subtítulos falsos.
-
 | Escenario | Resultado | Evidencia |
 |---|---|---|
-| Login admin | Pendiente | Video + `01-login.png` |
-| POS por peso | Pendiente | Video + `04-pos-cart.png` |
-| Ticket y stock | Pendiente | Video + `05-ticket.png` + `06-inventory-movement.png` |
-| Finanzas | Pendiente | Video + `07-finance.png` |
-| Roles cajero | Pendiente | Video + `08-cashier-permissions.png` |
-| Agente IA | Pendiente | Video + `09-ai.png` |
-| WhatsApp | Requiere Sandbox externo | Validación manual de Twilio |
+| Login y dashboard de administrador | Passed | `screenshots/01-login.png`, `02-dashboard.png` |
+| Catálogo CSV, ajuste y movimientos | Passed | `03-inventory.png`, `04-adjustment-movements.png` |
+| POS por peso, cobro y ticket | Passed | `05-pos-weighted-cart.png`, `06-ticket.png` |
+| Descuento de stock y movimiento de venta | Passed | `07-stock-and-sale-movement.png` |
+| Finanzas y gasto | Passed | `08-finance.png` |
+| Restricciones del cajero | Passed | `09-cashier-permissions.png` |
+| Agente con herramientas de negocio | Passed | `10-agent.png` |
+| Webhook de WhatsApp firmado | Passed (modo local) | `11-whatsapp-e2e.png` |
+
+El recorrido completo queda en `videos/erp-e2e-demo.webm` y sus subtítulos en `videos/erp-e2e-demo.srt`.
+
+## Servicios ejecutados realmente en local
+
+- Next.js.
+- PostgreSQL y Supabase Local.
+- Supabase Auth, RLS, políticas y RPCs.
+- Importación CSV, inventario, ventas, movimientos y finanzas.
+
+## Servicios simulados explícitamente para E2E
+
+- Proveedor de interpretación del agente IA: el agente usa herramientas controladas y consultas reales a PostgreSQL Local; no se invoca un modelo externo.
+- Adaptador Twilio/WhatsApp: el webhook HTTP usa una firma HMAC válida con un token local generado y devuelve TWiML local; no se conecta a Twilio.
+
+Por tanto, esta evidencia no afirma validación de Supabase Cloud, Vercel, Twilio Sandbox real ni un proveedor externo de IA.
