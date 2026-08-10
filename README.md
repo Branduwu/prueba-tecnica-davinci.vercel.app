@@ -30,14 +30,15 @@ Aplicación full-stack para operar un supermercado de barrio: punto de venta, in
 
 ```mermaid
 flowchart TD
-  U[Administrador o cajero] --> N[Next.js App Router]
-  N --> A[Supabase Auth]
-  N --> DB[(Supabase PostgreSQL)]
-  W[WhatsApp] --> T[Twilio Sandbox]
-  T --> H[/api/whatsapp]
-  H --> Tools[Herramientas controladas]
-  Tools --> DB
-  DB --> Tools --> T
+  U["Administrador o cajero"] --> N["Next.js App Router"]
+  N --> A["Supabase Auth"]
+  N --> DB[("Supabase PostgreSQL")]
+  W["WhatsApp"] --> T["Twilio Sandbox"]
+  T --> H["API: /api/whatsapp"]
+  H --> TOOLS["Herramientas controladas"]
+  TOOLS --> DB
+  DB --> TOOLS
+  TOOLS --> T
 ```
 
 ## Supabase
