@@ -78,8 +78,12 @@ En **Twilio Console → Messaging → Try it out → Send a WhatsApp message →
 
 1. Sube el repositorio a GitHub.
 2. Importa el repositorio en Vercel.
-3. Agrega las variables de `.env.example` en Project Settings.
-4. Despliega y actualiza la URL del webhook Twilio.
+3. Conserva el preset **Next.js** y el directorio raíz del repositorio.
+4. En **Project Settings → Environment Variables**, agrega para Production (y Preview si lo usarás): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` y `TWILIO_WHATSAPP_TO`. Agrega `AI_PROVIDER_API_KEY` y `AI_PROVIDER_URL` sólo si se conecta un proveedor externo.
+5. Despliega. No copies `.env.local` ni subas secretos al repositorio.
+6. En Supabase, añade `https://TU_DOMINIO_VERCEL` a las URL permitidas de Auth. En Twilio configura el webhook POST en `https://TU_DOMINIO_VERCEL/api/whatsapp`.
+
+La aplicación no requiere una URL absoluta fija: el webhook valida la firma usando la URL pública de la solicitud recibida. Las rutas API, Proxy de sesiones y assets estáticos son compatibles con el runtime estándar de Vercel.
 
 ## Calidad y decisiones
 
