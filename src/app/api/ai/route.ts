@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { answerBusinessQuestion } from '@/lib/ai/tools'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
 
 export async function POST(request: Request) {
+  if (!isSupabaseConfigured()) return Response.json({ error: 'Entorno de demostración no configurado' }, { status: 503 })
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (!token) return Response.json({ error: 'No autorizado' }, { status: 401 })
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
