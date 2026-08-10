@@ -1,34 +1,101 @@
-# Mercado ERP
+# ERP Supermercado
 
-ERP operativo para un supermercado de barrio: POS, inventario, finanzas y consultas de negocio por WhatsApp. Está creado con Next.js App Router, TypeScript, Supabase Auth/PostgreSQL y listo para Vercel.
+Aplicación full-stack para operar un supermercado de barrio: punto de venta, inventario, finanzas, control de roles y consultas de negocio por WhatsApp. Construida para una sucursal, dos cajas y un catálogo inicial de 100 productos.
+
+## Demo
+
+- App: **[PENDIENTE: URL pública de Vercel]**
+- Video: **PENDIENTE**
+- PDF ejecutivo: **PENDIENTE**
+
+## Stack
+
+- Next.js 16 con App Router y TypeScript
+- Supabase: PostgreSQL, Auth y Row Level Security
+- Tailwind CSS y componentes ligeros propios
+- Twilio WhatsApp Sandbox
+- Vercel y GitHub
 
 ## Funcionalidades
 
-- Autenticación Supabase y roles `admin` / `cashier`.
-- POS con búsqueda por SKU o nombre, carrito, kg con decimales, efectivo, cambio y comprobación de stock.
-- Venta atómica mediante PostgreSQL RPC: venta, partidas, descuento de stock y movimiento ocurren en una transacción.
-- Inventario, stock bajo, ajustes administrados e importación CSV por SKU.
-- Finanzas: ventas, gastos y flujo mensual.
-- Dashboard de administración y endpoints IA/WhatsApp con consultas controladas, sin SQL arbitrario.
+- Login por correo y contraseña con roles `admin` y `cashier`.
+- POS con búsqueda por nombre/SKU, productos por peso, efectivo, cambio y ticket imprimible.
+- Venta transaccional: crea venta, partidas, movimiento y descuento de stock de forma atómica.
+- Inventario con edición de catálogo, ajustes, alertas de stock bajo e historial de movimientos.
+- Importador robusto de CSV con Papa Parse y upsert por SKU.
+- Finanzas: ventas por periodo, gastos, flujo neto y top productos.
+- Agente de negocio con consultas controladas de Supabase, expuesto por API y WhatsApp.
 
 ## Arquitectura
 
 ```mermaid
 flowchart TD
-  U[Usuario] --> N[Next.js]
-  N --> S[Supabase Auth]
-  N --> P[(PostgreSQL)]
+  U[Administrador o cajero] --> N[Next.js App Router]
+  N --> A[Supabase Auth]
+  N --> DB[(Supabase PostgreSQL)]
+  W[WhatsApp] --> T[Twilio Sandbox]
+  T --> H[/api/whatsapp]
+  H --> Tools[Herramientas controladas]
+  Tools --> DB
+  DB --> Tools --> T
 ```
 
-```mermaid
-flowchart TD
-  W[WhatsApp] --> H[Webhook Next.js]
-  H --> A[Agente con herramientas]
-  A --> P[Supabase]
-  P --> A --> W
+## Supabase
+
+1. Crea un proyecto Supabase.
+2. Copia Project URL y Publishable Key desde **Project Settings → API**.
+3. Ejecuta las migraciones en orden desde SQL Editor.
+4. Crea los usuarios demo en **Authentication → Users**.
+5. Añade la URL de Vercel a las URL permitidas de Auth antes de desplegar.
+
+## Esquema de datos
+
+Las tablas principales son `profiles`, `products`, `sales`, `sale_items`, `inventory_movements` y `expenses`.
+
+Los campos monetarios y de stock usan `numeric`; stock admite tres decimales y el cobro se redondea a dos decimales por línea. La RPC `complete_sale` bloquea el producto, valida stock y registra toda la venta en una única transacción.
+
+## RLS
+
+- Todos los datos de negocio tienen RLS activado.
+- Cualquier usuario autenticado puede consultar productos y movimientos.
+- Sólo administradores escriben productos, gastos y ajustes.
+- Un cajero sólo consulta sus ventas; un administrador consulta todas.
+- Las funciones SQL críticas validan autenticación y permisos.
+
+## POS
+
+Busca por nombre o SKU, agrega al carrito, acepta cantidades decimales sólo para `kg` y bloquea cantidades inválidas, fracciones de pieza y stock insuficiente. Ejemplo: `0.750 kg × $28.50` se cobra visualmente como `$21.38`.
+
+## Inventarios
+
+El administrador puede editar nombre, categoría, unidad, precio, umbral y estado de producto. Puede registrar entradas y salidas en un modal con motivo. La pestaña Movimientos muestra fecha, producto, tipo, cantidades, stock anterior/nuevo, motivo y usuario.
+
+## Finanzas
+
+Muestra ventas de hoy, semana y mes; ingresos, egresos y flujo neto mensual. Incluye registro/historial de gastos y top 5 productos para hoy, semana o mes.
+
+## Roles
+
+- **Administrador:** dashboard, POS, inventario, ajustes y finanzas.
+- **Cajero:** POS y consulta de inventario.
+
+El trigger `on_auth_user_created` crea automáticamente el perfil con rol `cashier`. Una venta siempre guarda `cashier_id`.
+
+## Agente IA
+
+`POST /api/ai` requiere Bearer JWT de administrador. Responde únicamente con datos recuperados de Supabase: ventas, stock, inventario bajo, producto más vendido, gastos y flujo de caja. No acepta SQL del usuario ni genera cifras cuando no hay datos: responde `No encontré datos para esa consulta.`
+
+La clasificación actual es determinista para estas preguntas de negocio. `AI_PROVIDER_API_KEY` y `AI_PROVIDER_URL` están reservadas si se integra un proveedor LLM posteriormente; no se exponen al navegador.
+
+## WhatsApp
+
+`POST /api/whatsapp` recibe mensajes Twilio, valida `X-Twilio-Signature`, consulta el agente y responde al remitente. Configura el webhook POST en:
+
+```text
+https://TU_DOMINIO_DE_VERCEL/api/whatsapp
 ```
 
-## Instalación
+## Instalación local
 
 ```bash
 npm install
@@ -36,71 +103,88 @@ copy .env.example .env.local
 npm run dev
 ```
 
-Configura `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. `SUPABASE_SERVICE_ROLE_KEY` es exclusivamente para rutas de servidor (`/api/ai` y `/api/whatsapp`), nunca se expone al navegador.
+## Variables de entorno
 
-## Supabase y base de datos
+Consulta `.env.example`. Las variables de Supabase necesarias son:
 
-1. Crea un proyecto en Supabase.
-2. Abre SQL Editor y ejecuta, en orden, `001_initial_schema.sql`, `002_security_and_profile_fixes.sql` y `003_inventory_adjustment_validation.sql`.
-3. En **Authentication > Users**, crea `admin@supermercado.demo` y `cajero@supermercado.demo` con contraseñas exclusivas de tu entorno demo. El trigger crea automáticamente sus perfiles como cajero.
-4. Obtén el UUID del administrador y ejecuta la sentencia comentada correspondiente en `supabase/seed.sql`; después ejecuta el resto del archivo para datos iniciales.
-5. Copia URL, Publishable key y, solo en `.env.local`/Vercel, Service Role key.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
 
-Las políticas RLS limitan las escrituras de productos y gastos a administradores. `complete_sale` valida existencias y bloquea los productos dentro de la transacción; así evita ventas parciales y stock negativo.
+Para Twilio se requieren `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` y `TWILIO_WHATSAPP_TO`. Mantén todas las credenciales fuera de Git; `.env.local` está ignorado.
 
-## Importación CSV
+## Migraciones
 
-En Inventario, como administrador, selecciona un CSV con encabezados exactos:
+Ejecuta en este orden:
+
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_security_and_profile_fixes.sql`
+3. `supabase/migrations/003_inventory_adjustment_validation.sql`
+
+Después puedes ejecutar `supabase/seed.sql` para datos mínimos de desarrollo.
+
+## Carga CSV
+
+El catálogo completo está en `data/productos_supermercado.csv` y contiene 100 registros. En Inventario, como administrador, selecciona el archivo. El importador exige exactamente:
 
 ```text
 sku,producto,categoria,unidad,precio,stock
-FV-001,Tomate saladet,Frutas y Verduras,kg,28.50,120
 ```
 
-El catálogo completo se entrega en `data/productos_supermercado.csv` con 100 productos. Se hace `upsert` por SKU, por lo que una segunda importación actualiza los existentes sin duplicarlos. El parser Papa Parse admite valores CSV entrecomillados, incluidos nombres que contienen comas.
+Usa Papa Parse, valida datos, detecta SKU duplicados del archivo y hace upsert por SKU. Una segunda importación actualiza el catálogo sin crear duplicados.
 
-## IA y WhatsApp
+## Deploy Vercel
 
-`POST /api/ai` acepta `{ "question": "¿Cuánto vendimos hoy?" }` y requiere el JWT Bearer de un administrador. El clasificador usa sólo funciones de consulta acotadas para ventas, stock, bajos, gastos y flujo; nunca ejecuta SQL del usuario ni inventa resultados.
+1. Importa el repositorio GitHub en Vercel con preset **Next.js**.
+2. Agrega las variables de `.env.example` en Production; no copies `.env.local`.
+3. Despliega y usa el dominio resultante para Supabase Auth y el webhook Twilio.
+4. Verifica `npm run lint` y `npm run build` antes de cada despliegue.
 
-La primera integración es Twilio WhatsApp Sandbox. Configura en `.env.local` o Vercel, exclusivamente como variables de servidor:
+## Credenciales de demostración
 
-- `TWILIO_ACCOUNT_SID`: Account SID en Twilio Console.
-- `TWILIO_AUTH_TOKEN`: Auth Token en Twilio Console; nunca lo expongas ni lo subas a Git.
-- `TWILIO_WHATSAPP_FROM`: número Sandbox mostrado por Twilio, con formato `whatsapp:+...`.
-- `TWILIO_WHATSAPP_TO`: número de prueba vinculado al Sandbox, con formato `whatsapp:+...`; se conserva para pruebas manuales. Las respuestas del webhook se dirigen al remitente real del mensaje entrante.
+Los correos demo previstos son:
 
-En **Twilio Console → Messaging → Try it out → Send a WhatsApp message → Sandbox settings**, coloca como **When a message comes in** (método POST): `https://TU_DOMINIO_DE_VERCEL/api/whatsapp`. Vincula tu número enviando al Sandbox el código `join` que Twilio muestra. El webhook valida `X-Twilio-Signature` contra la URL pública exacta y rechaza firmas ausentes o inválidas. El proveedor está aislado en `src/lib/whatsapp/provider.ts`, por lo que Meta o Green API se pueden añadir implementando la misma interfaz.
+```text
+admin@supermercado.demo
+cajero@supermercado.demo
+```
 
-`AI_PROVIDER_*` queda reservado para conectar un modelo de clasificación/respuesta; la ruta actual es determinista y segura para el conjunto de preguntas de negocio.
+Las contraseñas se deben crear exclusivamente en el proyecto Supabase demo. No se publican en este repositorio hasta que exista ese entorno aislado.
 
-## Despliegue Vercel
+## Decisiones técnicas
 
-1. Sube el repositorio a GitHub.
-2. Importa el repositorio en Vercel.
-3. Conserva el preset **Next.js** y el directorio raíz del repositorio.
-4. En **Project Settings → Environment Variables**, agrega para Production (y Preview si lo usarás): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` y `TWILIO_WHATSAPP_TO`. Agrega `AI_PROVIDER_API_KEY` y `AI_PROVIDER_URL` sólo si se conecta un proveedor externo.
-5. Despliega. No copies `.env.local` ni subas secretos al repositorio.
-6. En Supabase, añade `https://TU_DOMINIO_VERCEL` a las URL permitidas de Auth. En Twilio configura el webhook POST en `https://TU_DOMINIO_VERCEL/api/whatsapp`.
+- PostgreSQL concentra la transacción de venta para evitar inventario inconsistente.
+- RLS protege el acceso por rol y el cliente no conoce la Service Role.
+- Papa Parse evita el parseo manual incorrecto de CSV con valores entrecomillados.
+- El agente sólo invoca consultas conocidas, no SQL arbitrario.
+- La UI prioriza un flujo directo para cajero y no incorpora librerías de componentes pesadas.
 
-La aplicación no requiere una URL absoluta fija: el webhook valida la firma usando la URL pública de la solicitud recibida. Las rutas API, Proxy de sesiones y assets estáticos son compatibles con el runtime estándar de Vercel.
+## Seguridad
 
-## Calidad y decisiones
+- `SUPABASE_SERVICE_ROLE_KEY`, Twilio Auth Token y claves IA son sólo de servidor.
+- `.env.local`, `.next` y `node_modules` están ignorados por Git.
+- `/api/ai` exige JWT de administrador.
+- `/api/whatsapp` valida la firma de Twilio.
 
-Ejecuta `npm run lint` y `npm run build`. La precisión de stock se conserva a tres decimales; cada línea y total se redondean a dos decimales para cobro. La operación crítica vive en PostgreSQL, no en el cliente. La interfaz usa componentes ligeros y CSS propio para conservar velocidad y explicabilidad.
+## Limitaciones
 
-Limitaciones deliberadas: no incluye facturación fiscal ni impresora física dedicada. El ticket puede imprimirse con el diálogo nativo del navegador. Antes de entregar verifica login de ambos roles, venta de `0.75 kg` de tomate, bloqueo por falta de stock, gasto eléctrico, CSV y pregunta WhatsApp.
+- La integración real de Supabase, Twilio y Vercel requiere configurar cuentas externas.
+- No incluye facturación fiscal, impresora física dedicada ni corte de caja.
+- El proveedor LLM externo está reservado; las preguntas de negocio actuales usan enrutamiento determinista y seguro.
 
-## Prueba rápida del sistema
+## Mejoras futuras
 
-1. Inicia sesión con el administrador y abre **Inventario**.
-2. Importa un CSV con los encabezados requeridos; verifica el resumen de procesados, insertados, actualizados y errores.
-3. Edita un producto y confirma que SKU permanece bloqueado; ajusta inventario con el modal.
-4. Revisa la pestaña **Movimientos** y confirma fecha, usuario y stock anterior/nuevo.
-5. En POS vende `0.750 kg` de Tomate saladet a $28.50; el ticket debe mostrar $21.38 y el stock bajar de 120 a 119.25.
-6. Confirma que una cantidad mayor al stock, cero o una fracción de un producto por pieza se bloquea.
-7. En **Finanzas**, registra un gasto de electricidad de $1,500 y comprueba egresos y flujo.
-8. Cambia el selector de Top productos entre Hoy, Semana y Mes.
-9. Inicia sesión como cajero: `/finanzas` debe redirigir a POS y no deben aparecer botones de edición o ajuste.
-10. Con JWT de administrador consulta `/api/ai`; prueba ventas, stock, top productos, gastos y flujo. Sin resultados debe responder “No encontré datos para esa consulta.”
-11. Configura Twilio Sandbox y comprueba que una llamada sin firma válida devuelve 401 y una llamada real recibe respuesta.
+- Corte y cierre de caja por turno.
+- Compras, proveedores, mermas y caducidades.
+- Promociones, descuentos y reportes gráficos.
+- Integración LLM configurable para consultas de lenguaje más abierto.
+
+## Prueba rápida
+
+1. Inicia sesión como administrador e importa el CSV.
+2. Vende `0.750 kg` de Tomate saladet y confirma ticket, stock y movimiento.
+3. Registra un gasto y revisa flujo/top productos.
+4. Inicia como cajero y confirma que `/finanzas` redirige a POS.
+5. Configura Twilio y consulta ventas o stock por WhatsApp.
