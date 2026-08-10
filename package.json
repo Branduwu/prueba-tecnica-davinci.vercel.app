@@ -11,6 +11,7 @@
     "test:e2e:demo": "playwright test tests/e2e/full-erp-demo.spec.ts --project=chromium && node scripts/collect-e2e-evidence.mjs",
     "test:e2e:report": "playwright show-report",
     "e2e:setup": "node scripts/e2e-setup.mjs",
+    "e2e:dev": "node scripts/run-local-e2e-dev.mjs",
     "e2e:demo": "node scripts/run-local-e2e.mjs",
     "e2e:teardown": "node scripts/e2e-teardown.mjs"
   },

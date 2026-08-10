@@ -7,8 +7,9 @@ Esta evidencia se genera automáticamente contra el entorno local reproducible d
 1. Instala Docker Desktop y asegúrate de que esté en ejecución.
 2. Instala Chromium una vez: `npx playwright install chromium`.
 3. Ejecuta `npm run e2e:setup`. Inicia Supabase Local, reinicia la base de datos, aplica las migraciones y crea usuarios de demostración locales en un archivo ignorado por Git.
-4. Ejecuta `npm run e2e:demo`. Levanta Next.js, ejecuta Playwright y recopila video, subtítulos y capturas.
-5. Opcionalmente, ejecuta `npm run e2e:teardown` para detener sólo el stack local de Supabase de este proyecto.
+4. Para entrar manualmente, ejecuta `npm run e2e:dev` y abre `http://127.0.0.1:3000`. Este comando carga el entorno local sin modificar `.env.local`.
+5. Ejecuta `npm run e2e:demo`. Levanta Next.js, ejecuta Playwright y recopila video, subtítulos y capturas.
+6. Opcionalmente, ejecuta `npm run e2e:teardown` para detener sólo el stack local de Supabase de este proyecto.
 
 Las contraseñas, claves y configuración local se generan en `.env.e2e.local`, que está ignorado por Git. Nunca se deben reutilizar en producción.
 

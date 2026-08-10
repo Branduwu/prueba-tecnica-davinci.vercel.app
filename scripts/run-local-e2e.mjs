@@ -6,7 +6,8 @@ if (!existsSync('.env.e2e.local')) throw new Error('Falta .env.e2e.local. Ejecut
 loadEnvironment({ path: '.env.e2e.local', override: true, quiet: true })
 process.env.E2E_LOCAL_MODE = 'true'
 const baseURL = process.env.E2E_BASE_URL
-const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev'], { env: process.env, stdio: 'ignore' })
+const target = new URL(baseURL)
+const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', target.port || '3000', '-H', target.hostname], { env: process.env, stdio: 'ignore' })
 
 async function waitForServer() {
   const deadline = Date.now() + 120_000
