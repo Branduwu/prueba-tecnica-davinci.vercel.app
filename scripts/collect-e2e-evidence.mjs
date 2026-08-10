@@ -14,7 +14,10 @@ async function findVideo(directory) {
 }
 
 const video = await findVideo('test-results')
-if (!video) throw new Error('No se encontró video E2E para recopilar evidencia.')
+if (!video) {
+  console.log('E2E omitido o sin video: no se generó evidencia para recopilar.')
+  process.exit(0)
+}
 await mkdir('docs/evidence/videos', { recursive: true })
 await copyFile(video, 'docs/evidence/videos/erp-e2e-demo.webm')
 
