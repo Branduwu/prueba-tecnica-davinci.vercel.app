@@ -2,11 +2,14 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import DemoPos from '@/components/demo/demo-pos'
+import { isDemoMode } from '@/lib/supabase/config'
 import type { CartItem, Product } from '@/types/database'
 const money=(n:number)=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0)
 const roundMoney=(n:number)=>Math.round((n+Number.EPSILON)*100)/100
 type Ticket={folio:string;date:Date;cashier:string;items:CartItem[];total:number;received:number;change:number}
-export default function Pos(){const [db]=useState(()=>createClient());const [products,setProducts]=useState<Product[]>([]);const [q,setQ]=useState('');const [cart,setCart]=useState<CartItem[]>([]);const [cash,setCash]=useState('');const [notice,setNotice]=useState('');const [loading,setLoading]=useState(false);const [cashier,setCashier]=useState('');const [ticket,setTicket]=useState<Ticket|null>(null)
+export default function Pos(){if(isDemoMode())return <DemoPos/>;return <SupabasePos/>}
+function SupabasePos(){const [db]=useState(()=>createClient());const [products,setProducts]=useState<Product[]>([]);const [q,setQ]=useState('');const [cart,setCart]=useState<CartItem[]>([]);const [cash,setCash]=useState('');const [notice,setNotice]=useState('');const [loading,setLoading]=useState(false);const [cashier,setCashier]=useState('');const [ticket,setTicket]=useState<Ticket|null>(null)
  async function load(){const {data}=await db.from('products').select('*').eq('active',true).order('name');setProducts((data??[]) as Product[])}
  useEffect(()=>{void load();void db.auth.getUser().then(async({data:{user}})=>{if(!user)return;const {data}=await db.from('profiles').select('full_name').eq('id',user.id).single();setCashier(data?.full_name??'Cajero')})},[])
  const results=products.filter(p=>(p.name+p.sku).toLowerCase().includes(q.toLowerCase())).slice(0,20);const total=roundMoney(cart.reduce((sum,product)=>sum+roundMoney(product.price*product.quantity),0));const received=Number(cash)||0

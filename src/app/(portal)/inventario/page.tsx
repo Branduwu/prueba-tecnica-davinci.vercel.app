@@ -4,6 +4,8 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import { createClient } from '@/lib/supabase/client'
+import DemoInventory from '@/components/demo/demo-inventory'
+import { isDemoMode } from '@/lib/supabase/config'
 import type { Product, Role } from '@/types/database'
 
 type Movement = { id:string; movement_type:string; quantity:number; previous_stock:number; new_stock:number; reason:string; created_at:string; product_id:string; products:{name:string;sku:string}|null; profiles:{full_name:string}|null }
@@ -11,7 +13,8 @@ type Editable = Pick<Product,'id'|'name'|'category'|'unit'|'price'|'low_stock_th
 const money=(n:number)=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n)
 const units=['pieza','paquete','manojo','kg'] as const
 
-export default function Inventory(){
+export default function Inventory(){if(isDemoMode())return <DemoInventory/>;return <SupabaseInventory/>}
+function SupabaseInventory(){
  const [db]=useState(()=>createClient()); const [products,setProducts]=useState<Product[]>([]); const [moves,setMoves]=useState<Movement[]>([]); const [q,setQ]=useState(''); const [moveDate,setMoveDate]=useState(''); const [role,setRole]=useState<Role>('cashier'); const [tab,setTab]=useState<'products'|'moves'>('products'); const [message,setMessage]=useState(''); const [editing,setEditing]=useState<Editable|null>(null); const [adjusting,setAdjusting]=useState<Product|null>(null)
  async function load(){const [{data:p},{data:m}]=await Promise.all([db.from('products').select('*').order('name'),db.from('inventory_movements').select('id,movement_type,quantity,previous_stock,new_stock,reason,created_at,product_id,products(name,sku),profiles(full_name)').order('created_at',{ascending:false}).limit(100)]);setProducts((p??[]) as Product[]);setMoves((m??[]) as unknown as Movement[])}
  useEffect(()=>{void load();void db.auth.getUser().then(async({data:{user}})=>{if(!user)return;const {data}=await db.from('profiles').select('role').eq('id',user.id).single();if(data)setRole(data.role)})},[])

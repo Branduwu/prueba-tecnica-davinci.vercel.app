@@ -1,9 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { isDemoMode, isSupabaseConfigured } from '@/lib/supabase/config'
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request })
+  if (isDemoMode()) return response
   if (!isSupabaseConfigured()) {
     if (!request.nextUrl.pathname.startsWith('/api/') && request.nextUrl.pathname !== '/login') {
       return NextResponse.redirect(new URL('/login', request.url))

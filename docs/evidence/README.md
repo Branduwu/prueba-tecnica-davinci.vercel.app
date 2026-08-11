@@ -1,5 +1,15 @@
 # Evidencia E2E local
 
+## Modo Demo autocontenido
+
+Ejecuta `npm run test:e2e:demo-mode` para validar el ERP sin Supabase, Docker, Twilio ni una API de IA. El comando levanta Next.js con `NEXT_PUBLIC_DEMO_MODE=true`, usa únicamente el estado del navegador y genera:
+
+- `videos/erp-demo-mode-e2e.webm`
+- `videos/erp-demo-mode-e2e.srt`
+- `screenshots/demo-01-login.png` a `screenshots/demo-10-cashier.png`
+
+La evidencia cubre administrador, cajero, el catálogo oficial, POS por peso, ticket, persistencia local, movimientos, finanzas, agente demo y WhatsApp simulado. No afirma integración con servicios externos.
+
 Esta evidencia se genera automáticamente contra el entorno local reproducible del proyecto. No utiliza Supabase Cloud, Vercel, Twilio Sandbox ni una API externa de IA.
 
 ## Ejecución

@@ -2,9 +2,9 @@
 
 Aplicación full-stack para operar un supermercado de barrio: punto de venta, inventario, finanzas, control de roles y consultas de negocio por WhatsApp. Construida para una sucursal, dos cajas y un catálogo inicial de 100 productos.
 
-## Demo
+## Demo pública
 
-- App: **[PENDIENTE: URL pública de Vercel]**
+- URL: **[PENDIENTE URL VERCEL]**
 - Video: **PENDIENTE**
 - PDF ejecutivo: **PENDIENTE**
 
@@ -25,6 +25,7 @@ Aplicación full-stack para operar un supermercado de barrio: punto de venta, in
 - Importador robusto de CSV con Papa Parse y upsert por SKU.
 - Finanzas: ventas por periodo, gastos, flujo neto y top productos.
 - Agente de negocio con consultas controladas de Supabase, expuesto por API y WhatsApp.
+- Modo Demo autocontenido para evaluar el ERP completo sin Supabase Cloud ni servicios externos.
 
 ## Arquitectura
 
@@ -109,10 +110,13 @@ npm run dev
 Consulta `.env.example`. Las variables de Supabase necesarias son:
 
 ```env
+NEXT_PUBLIC_DEMO_MODE=false
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
+
+Para una demo pública sin Supabase, configura únicamente `NEXT_PUBLIC_DEMO_MODE=true` y vuelve a desplegar. Si existen URL y Publishable Key válidas de Supabase, la aplicación usa Supabase y el modo demo no se activa.
 
 Para Twilio se requieren `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` y `TWILIO_WHATSAPP_TO`. Mantén todas las credenciales fuera de Git; `.env.local` está ignorado.
 
@@ -139,20 +143,25 @@ Usa Papa Parse, valida datos, detecta SKU duplicados del archivo y hace upsert p
 ## Deploy Vercel
 
 1. Importa el repositorio GitHub en Vercel con preset **Next.js**.
-2. Agrega las variables de `.env.example` en Production; no copies `.env.local`.
+2. Para el entorno conectado agrega las variables de `.env.example` en Production; para el modo público autocontenido basta `NEXT_PUBLIC_DEMO_MODE=true`. No copies `.env.local`.
 3. Despliega y usa el dominio resultante para Supabase Auth y el webhook Twilio.
 4. Verifica `npm run lint` y `npm run build` antes de cada despliegue.
 
-## Credenciales de demostración
+## Credenciales demo
 
-Los correos demo previstos son:
+Disponibles exclusivamente cuando `NEXT_PUBLIC_DEMO_MODE=true` y no hay una configuración válida de Supabase:
 
-```text
-admin@supermercado.demo
-cajero@supermercado.demo
-```
+| Rol | Correo | Contraseña |
+| --- | --- | --- |
+| Administrador | `admin@supermercado.demo` | `AdminDemo2026!` |
+| Cajero | `cajero@supermercado.demo` | `CajeroDemo2026!` |
 
-Las contraseñas se deben crear exclusivamente en el proyecto Supabase demo. No se publican en este repositorio hasta que exista ese entorno aislado.
+## Sobre el modo Demo
+
+- Permite evaluar login, roles, catálogo oficial de 100 productos, POS, inventario, finanzas, agente y chat de WhatsApp sin credenciales externas.
+- Los productos, ventas, movimientos y gastos se almacenan en `localStorage` del navegador; **Restablecer datos demo** recupera el catálogo y elimina la operación local.
+- La integración real con Supabase permanece disponible para un entorno conectado y tiene prioridad cuando sus variables públicas están configuradas.
+- El agente es determinista y el panel de WhatsApp es una simulación visual: no se conecta a un proveedor IA ni a Twilio.
 
 ## Decisiones técnicas
 

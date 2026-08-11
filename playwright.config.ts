@@ -4,6 +4,21 @@ import { config as loadEnvironment } from 'dotenv'
 loadEnvironment({ path: '.env.test.local' })
 const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000'
 const localE2E = process.env.E2E_LOCAL_MODE === 'true'
+const demoE2E = process.env.E2E_MODE === 'demo'
+const localBaseURL = /^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/i.test(baseURL)
+
+const demoWebServer = demoE2E && localBaseURL && process.env.E2E_DEMO_SERVER_MANAGED !== 'true' ? {
+  command: 'node node_modules/next/dist/bin/next dev -p 3000 -H 127.0.0.1',
+  url: baseURL,
+  reuseExistingServer: false,
+  timeout: 120_000,
+  env: {
+    NEXT_PUBLIC_DEMO_MODE: 'true',
+    NEXT_PUBLIC_SUPABASE_URL: '',
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '',
+    SUPABASE_SERVICE_ROLE_KEY: '',
+  },
+} : undefined
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -19,7 +34,7 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: localE2E ? {
+  webServer: demoWebServer ?? (localE2E ? {
     command: 'node node_modules/next/dist/bin/next dev',
     url: baseURL,
     reuseExistingServer: false,
@@ -29,5 +44,5 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-  },
+  }),
 })

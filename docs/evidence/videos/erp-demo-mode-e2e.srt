@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:05,000
+Entorno Demo: ERP autocontenido, sin servicios externos
+
+2
+00:00:05,000 --> 00:00:15,000
+Administrador Demo: dashboard e inventario con catálogo oficial
+
+3
+00:00:15,000 --> 00:00:29,000
+POS Demo: venta por peso, cobro, cambio y ticket
+
+4
+00:00:29,000 --> 00:00:39,000
+Inventario y finanzas: estado local persistente y métricas calculadas
+
+5
+00:00:39,000 --> 00:00:48,000
+Agente de negocio — modo demo: respuestas desde los datos del ERP
+
+6
+00:00:48,000 --> 00:00:55,000
+WhatsApp — simulación de integración, sin Twilio externo
+
+7
+00:00:55,000 --> 00:01:06,000
+Cajero Demo: POS e inventario de consulta, sin permisos administrativos
