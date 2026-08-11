@@ -40,7 +40,7 @@ try {
     await waitForServer()
   }
 
-  const testCode = await run(process.execPath, ['node_modules/@playwright/test/cli.js', 'test', 'tests/e2e/demo-mode.spec.ts', '--project=chromium'], {
+  const testCode = await run(process.execPath, ['node_modules/@playwright/test/cli.js', 'test', 'tests/e2e/demo-mode.spec.ts', 'tests/e2e/visual-audit.spec.ts', '--project=chromium'], {
     ...process.env,
     E2E_MODE: 'demo',
     E2E_BASE_URL: baseURL,
@@ -55,5 +55,7 @@ try {
 }
 
 if (process.exitCode) process.exit(process.exitCode)
-const collectCode = await run(process.execPath, ['scripts/collect-demo-mode-evidence.mjs'], process.env)
-process.exit(collectCode)
+const evidenceCode = await run(process.execPath, ['scripts/collect-demo-mode-evidence.mjs'], process.env)
+if (evidenceCode !== 0) process.exit(evidenceCode)
+const auditCode = await run(process.execPath, ['scripts/collect-visual-audit.mjs'], process.env)
+process.exit(auditCode)

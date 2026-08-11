@@ -23,3 +23,7 @@ export async function showCaption(page: Page, message: string, duration = 1_800)
 export async function screenshot(page: Page, filename: string) {
   await page.screenshot({ path: `docs/evidence/screenshots/${filename}`, fullPage: true })
 }
+
+export async function finalScreenshot(page: Page, filename: string) {
+  await page.screenshot({ path: `docs/evidence/screenshots/final/${filename}` })
+}
