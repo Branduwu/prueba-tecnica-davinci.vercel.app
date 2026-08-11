@@ -4,7 +4,7 @@ export async function login(page: Page, email: string, password: string, destina
   await page.goto('/login')
   await page.getByLabel('Correo').fill(email)
   await page.getByLabel('Contraseña').fill(password)
-  await page.getByRole('button', { name: 'Entrar al sistema' }).click()
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
   const loginError = page.locator('.error')
   await Promise.race([
     expect(page).toHaveURL(destination),

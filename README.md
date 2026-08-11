@@ -4,9 +4,42 @@ Aplicación full-stack para operar un supermercado de barrio: punto de venta, in
 
 ## Demo pública
 
-- URL: **[PENDIENTE URL VERCEL]**
+- App: https://prueba-tecnica-davinci-vercel-app.vercel.app
 - Video: **PENDIENTE**
 - PDF ejecutivo: **PENDIENTE**
+
+## Credenciales de demostración
+
+### Administrador
+
+Email: `admin@supermercado.demo`
+Password: `AdminDemo2026!`
+
+Permisos:
+
+- Dashboard
+- POS
+- Inventario
+- Ajustes
+- Finanzas
+
+### Cajero
+
+Email: `cajero@supermercado.demo`
+Password: `CajeroDemo2026!`
+
+Permisos:
+
+- POS
+- Consulta de inventario
+
+Sin acceso a:
+
+- Finanzas
+- Edición de productos
+- Ajustes de inventario
+
+> Estas credenciales pertenecen exclusivamente al entorno de demostración y no tienen acceso a sistemas productivos.
 
 ## Stack
 
@@ -146,15 +179,6 @@ Usa Papa Parse, valida datos, detecta SKU duplicados del archivo y hace upsert p
 2. Para el entorno conectado agrega las variables de `.env.example` en Production; para el modo público autocontenido basta `NEXT_PUBLIC_DEMO_MODE=true`. No copies `.env.local`.
 3. Despliega y usa el dominio resultante para Supabase Auth y el webhook Twilio.
 4. Verifica `npm run lint` y `npm run build` antes de cada despliegue.
-
-## Credenciales demo
-
-Disponibles exclusivamente cuando `NEXT_PUBLIC_DEMO_MODE=true` y no hay una configuración válida de Supabase:
-
-| Rol | Correo | Contraseña |
-| --- | --- | --- |
-| Administrador | `admin@supermercado.demo` | `AdminDemo2026!` |
-| Cajero | `cajero@supermercado.demo` | `CajeroDemo2026!` |
 
 ## Sobre el modo Demo
 
