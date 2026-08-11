@@ -1,53 +1,32 @@
-# Evidencia E2E local
+# Evidencia E2E
 
-## Modo Demo autocontenido
+## Recorrido visual del modo demo
 
-Ejecuta `npm run test:e2e:demo-mode` para validar el ERP sin Supabase, Docker, Twilio ni una API de IA. El comando levanta Next.js con `NEXT_PUBLIC_DEMO_MODE=true`, usa únicamente el estado del navegador y genera:
+Ejecuta `npm run test:e2e:demo` para validar el ERP autocontenido sin Supabase Cloud, Twilio ni un proveedor de IA externo. El comando inicia Next.js con `NEXT_PUBLIC_DEMO_MODE=true`, ejecuta el recorrido de administrador y cajero, comprueba la integridad visual en siete resoluciones y recopila:
 
 - `videos/erp-demo-mode-e2e.webm`
 - `videos/erp-demo-mode-e2e.srt`
-- `screenshots/demo-01-login.png` a `screenshots/demo-10-cashier.png`
+- `screenshots/final/01-login.png` a `screenshots/final/12-cashier-restricted.png`
+- `visual-audit.md`
 
-La evidencia cubre administrador, cajero, el catálogo oficial, POS por peso, ticket, persistencia local, movimientos, finanzas, agente demo y WhatsApp simulado. No afirma integración con servicios externos.
+La evidencia cubre login, roles, dashboard, catálogo de 100 productos, POS por peso, cambio, ticket, movimientos, finanzas, agente de negocio y la simulación de WhatsApp. No afirma integración con servicios externos.
 
-Esta evidencia se genera automáticamente contra el entorno local reproducible del proyecto. No utiliza Supabase Cloud, Vercel, Twilio Sandbox ni una API externa de IA.
+## Requisitos locales
 
-## Ejecución
+1. Instala dependencias con `npm install`.
+2. Instala Chromium una vez con `npx playwright install chromium`.
+3. Ejecuta `npm run test:e2e:demo`.
 
-1. Instala Docker Desktop y asegúrate de que esté en ejecución.
-2. Instala Chromium una vez: `npx playwright install chromium`.
-3. Ejecuta `npm run e2e:setup`. Inicia Supabase Local, reinicia la base de datos, aplica las migraciones y crea usuarios de demostración locales en un archivo ignorado por Git.
-4. Para entrar manualmente, ejecuta `npm run e2e:dev` y abre `http://127.0.0.1:3000`. Este comando carga el entorno local sin modificar `.env.local`.
-5. Ejecuta `npm run e2e:demo`. Levanta Next.js, ejecuta Playwright y recopila video, subtítulos y capturas.
-6. Opcionalmente, ejecuta `npm run e2e:teardown` para detener sólo el stack local de Supabase de este proyecto.
+No se requieren secretos ni Docker para el recorrido demo. Los datos se conservan sólo durante la demostración en el navegador.
 
-Las contraseñas, claves y configuración local se generan en `.env.e2e.local`, que está ignorado por Git. Nunca se deben reutilizar en producción.
+## Alcance de la evidencia
 
-## Resultado de la última ejecución
-
-| Escenario | Resultado | Evidencia |
+| Escenario | Resultado esperado | Evidencia |
 |---|---|---|
-| Login y dashboard de administrador | Passed | `screenshots/01-login.png`, `02-dashboard.png` |
-| Catálogo CSV, ajuste y movimientos | Passed | `03-inventory.png`, `04-adjustment-movements.png` |
-| POS por peso, cobro y ticket | Passed | `05-pos-weighted-cart.png`, `06-ticket.png` |
-| Descuento de stock y movimiento de venta | Passed | `07-stock-and-sale-movement.png` |
-| Finanzas y gasto | Passed | `08-finance.png` |
-| Restricciones del cajero | Passed | `09-cashier-permissions.png` |
-| Agente con herramientas de negocio | Passed | `10-agent.png` |
-| Webhook de WhatsApp firmado | Passed (modo local) | `11-whatsapp-e2e.png` |
+| Administrador | Dashboard, POS, inventario y finanzas | `screenshots/final/02-dashboard.png` a `08-finance.png` |
+| POS por peso | Tomate 0.750 kg, total $21.38 y cambio $28.62 | `screenshots/final/04-pos-weight.png` y `05-ticket.png` |
+| Inventario | Stock descontado y movimiento de venta | `screenshots/final/06-inventory.png` y `07-movements.png` |
+| Consultas | Asistente y simulación de WhatsApp | `screenshots/final/09-agent.png` y `10-whatsapp-demo.png` |
+| Cajero | Inventario de consulta y restricción administrativa | `screenshots/final/11-cashier.png` y `12-cashier-restricted.png` |
 
-El recorrido completo queda en `videos/erp-e2e-demo.webm` y sus subtítulos en `videos/erp-e2e-demo.srt`.
-
-## Servicios ejecutados realmente en local
-
-- Next.js.
-- PostgreSQL y Supabase Local.
-- Supabase Auth, RLS, políticas y RPCs.
-- Importación CSV, inventario, ventas, movimientos y finanzas.
-
-## Servicios simulados explícitamente para E2E
-
-- Proveedor de interpretación del agente IA: el agente usa herramientas controladas y consultas reales a PostgreSQL Local; no se invoca un modelo externo.
-- Adaptador Twilio/WhatsApp: el webhook HTTP usa una firma HMAC válida con un token local generado y devuelve TWiML local; no se conecta a Twilio.
-
-Por tanto, esta evidencia no afirma validación de Supabase Cloud, Vercel, Twilio Sandbox real ni un proveedor externo de IA.
+La auditoría de overflow, controles y modales queda documentada en [visual-audit.md](visual-audit.md). Para una validación con Supabase Local, se mantienen disponibles los comandos `npm run e2e:setup`, `npm run e2e:demo` y `npm run e2e:teardown`.

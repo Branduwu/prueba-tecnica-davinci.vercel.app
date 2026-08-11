@@ -1,224 +1,173 @@
-# ERP Supermercado
+# Mercado Central — ERP Supermercado
 
-Aplicación full-stack para operar un supermercado de barrio: punto de venta, inventario, finanzas, control de roles y consultas de negocio por WhatsApp. Construida para una sucursal, dos cajas y un catálogo inicial de 100 productos.
+> Sistema integral para punto de venta, inventarios, finanzas y consultas inteligentes del negocio.
 
-## Demo pública
+[![Next.js](https://img.shields.io/badge/Next.js-16-111111?logo=next.js)](https://nextjs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Supabase Ready](https://img.shields.io/badge/Supabase-Ready-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/) [![Vercel](https://img.shields.io/badge/Vercel-Deployed-111111?logo=vercel)](https://vercel.com/) [![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
 
-- App: https://prueba-tecnica-davinci-vercel-app.vercel.app
-- Video: **PENDIENTE**
-- PDF ejecutivo: **PENDIENTE**
+## 🚀 Demo en vivo
 
-## Credenciales de demostración
+**Aplicación:** [prueba-tecnica-davinci-vercel-app.vercel.app](https://prueba-tecnica-davinci-vercel-app.vercel.app)
 
 ### Administrador
 
-Email: `admin@supermercado.demo`
-Password: `AdminDemo2026!`
-
-Permisos:
-
-- Dashboard
-- POS
-- Inventario
-- Ajustes
-- Finanzas
+| Campo | Valor |
+|---|---|
+| Email | `admin@supermercado.demo` |
+| Password | `AdminDemo2026!` |
+| Permisos | Dashboard, POS, inventario, ajustes y finanzas |
 
 ### Cajero
 
-Email: `cajero@supermercado.demo`
-Password: `CajeroDemo2026!`
+| Campo | Valor |
+|---|---|
+| Email | `cajero@supermercado.demo` |
+| Password | `CajeroDemo2026!` |
+| Permisos | POS y consulta de inventario |
 
-Permisos:
+El cajero no puede acceder a finanzas, editar productos ni ajustar inventario. Estas credenciales pertenecen exclusivamente al entorno de demostración y no dan acceso a sistemas productivos.
 
-- POS
-- Consulta de inventario
+## 📦 Entregables
 
-Sin acceso a:
+| Entregable | Enlace |
+|---|---|
+| Aplicación | [Demo pública](https://prueba-tecnica-davinci-vercel-app.vercel.app) |
+| Repositorio | [Branduwu/prueba-tecnica-davinci.vercel.app](https://github.com/Branduwu/prueba-tecnica-davinci.vercel.app) |
+| Video de avances | PENDIENTE de enlace externo final |
+| PDF ejecutivo | [Ver informe ejecutivo](https://drive.google.com/file/d/1YLYgbnqHulY7gH6ri8Egg0p9gNrG0OwJ/view?usp=sharing) |
 
-- Finanzas
-- Edición de productos
-- Ajustes de inventario
+## 🧩 Módulos
 
-> Estas credenciales pertenecen exclusivamente al entorno de demostración y no tienen acceso a sistemas productivos.
+| Módulo | Funcionalidad |
+|---|---|
+| POS | Búsqueda por SKU/nombre, cobro, peso, cambio y ticket |
+| Inventario | Stock decimal, ajustes, movimientos y catálogo CSV |
+| Finanzas | Ventas por periodo, gastos, flujo neto y productos más vendidos |
+| Usuarios | Roles de administrador y cajero con permisos diferenciados |
+| Agente | Consultas de negocio con herramientas controladas |
+| WhatsApp | Demostración del flujo conversacional del negocio |
 
-## Stack
-
-- Next.js 16 con App Router y TypeScript
-- Supabase: PostgreSQL, Auth y Row Level Security
-- Tailwind CSS y componentes ligeros propios
-- Twilio WhatsApp Sandbox
-- Vercel y GitHub
-
-## Funcionalidades
-
-- Login por correo y contraseña con roles `admin` y `cashier`.
-- POS con búsqueda por nombre/SKU, productos por peso, efectivo, cambio y ticket imprimible.
-- Venta transaccional: crea venta, partidas, movimiento y descuento de stock de forma atómica.
-- Inventario con edición de catálogo, ajustes, alertas de stock bajo e historial de movimientos.
-- Importador robusto de CSV con Papa Parse y upsert por SKU.
-- Finanzas: ventas por periodo, gastos, flujo neto y top productos.
-- Agente de negocio con consultas controladas de Supabase, expuesto por API y WhatsApp.
-- Modo Demo autocontenido para evaluar el ERP completo sin Supabase Cloud ni servicios externos.
-
-## Arquitectura
+## 🏗️ Arquitectura
 
 ```mermaid
 flowchart TD
-  U["Administrador o cajero"] --> N["Next.js App Router"]
-  N --> A["Supabase Auth"]
-  N --> DB[("Supabase PostgreSQL")]
-  W["WhatsApp"] --> T["Twilio Sandbox"]
-  T --> H["API: /api/whatsapp"]
-  H --> TOOLS["Herramientas controladas"]
-  TOOLS --> DB
-  DB --> TOOLS
-  TOOLS --> T
+  U["Usuario"] --> N["Next.js App Router"]
+  N --> SA["Supabase Auth"]
+  SA --> DB[("PostgreSQL")]
+
+  U --> DM["Next.js en modo demo"]
+  DM --> DP["Proveedor de datos demo"]
+  DP --> LS[("Almacenamiento local")]
+
+  Q["Consulta de negocio"] --> T["Herramientas controladas"]
+  T --> D["Datos del ERP"]
+  D --> R["Respuesta"]
 ```
 
-## Supabase
+El proyecto admite dos proveedores de datos. En un entorno configurado usa Supabase y PostgreSQL; en la demo pública utiliza un estado autocontenido para que el recorrido sea evaluable sin claves externas.
 
-1. Crea un proyecto Supabase.
-2. Copia Project URL y Publishable Key desde **Project Settings → API**.
-3. Ejecuta las migraciones en orden desde SQL Editor.
-4. Crea los usuarios demo en **Authentication → Users**.
-5. Añade la URL de Vercel a las URL permitidas de Auth antes de desplegar.
+## 🧠 Decisiones técnicas
 
-## Esquema de datos
+- **Next.js App Router + TypeScript:** separación clara entre interfaz, rutas y lógica.
+- **Proveedores de datos desacoplados:** una misma experiencia puede operar con Supabase o con el modo demo.
+- **POS de cantidades precisas:** artículos por kilogramo admiten decimales; piezas, paquetes y manojos exigen enteros.
+- **Persistencia transaccional:** el flujo Supabase usa RPCs para completar ventas y ajustar inventario de forma consistente.
+- **Roles definidos:** el servidor y la interfaz contemplan administrador y cajero.
+- **Calidad reproducible:** Playwright registra el recorrido funcional y visual del modo demo.
 
-Las tablas principales son `profiles`, `products`, `sales`, `sale_items`, `inventory_movements` y `expenses`.
+## 🧪 Validación E2E
 
-Los campos monetarios y de stock usan `numeric`; stock admite tres decimales y el cobro se redondea a dos decimales por línea. La RPC `complete_sale` bloquea el producto, valida stock y registra toda la venta en una única transacción.
+La suite de Playwright verifica los recorridos de administrador y cajero, login, permisos, catálogo, venta por peso, cambio, ticket, inventario, movimientos, finanzas, agente de negocio y simulación de WhatsApp.
 
-## RLS
-
-- Todos los datos de negocio tienen RLS activado.
-- Cualquier usuario autenticado puede consultar productos y movimientos.
-- Sólo administradores escriben productos, gastos y ajustes.
-- Un cajero sólo consulta sus ventas; un administrador consulta todas.
-- Las funciones SQL críticas validan autenticación y permisos.
-
-## POS
-
-Busca por nombre o SKU, agrega al carrito, acepta cantidades decimales sólo para `kg` y bloquea cantidades inválidas, fracciones de pieza y stock insuficiente. Ejemplo: `0.750 kg × $28.50` se cobra visualmente como `$21.38`.
-
-## Inventarios
-
-El administrador puede editar nombre, categoría, unidad, precio, umbral y estado de producto. Puede registrar entradas y salidas en un modal con motivo. La pestaña Movimientos muestra fecha, producto, tipo, cantidades, stock anterior/nuevo, motivo y usuario.
-
-## Finanzas
-
-Muestra ventas de hoy, semana y mes; ingresos, egresos y flujo neto mensual. Incluye registro/historial de gastos y top 5 productos para hoy, semana o mes.
-
-## Roles
-
-- **Administrador:** dashboard, POS, inventario, ajustes y finanzas.
-- **Cajero:** POS y consulta de inventario.
-
-El trigger `on_auth_user_created` crea automáticamente el perfil con rol `cashier`. Una venta siempre guarda `cashier_id`.
-
-## Agente IA
-
-`POST /api/ai` requiere Bearer JWT de administrador. Responde únicamente con datos recuperados de Supabase: ventas, stock, inventario bajo, producto más vendido, gastos y flujo de caja. No acepta SQL del usuario ni genera cifras cuando no hay datos: responde `No encontré datos para esa consulta.`
-
-La clasificación actual es determinista para estas preguntas de negocio. `AI_PROVIDER_API_KEY` y `AI_PROVIDER_URL` están reservadas si se integra un proveedor LLM posteriormente; no se exponen al navegador.
-
-## WhatsApp
-
-`POST /api/whatsapp` recibe mensajes Twilio, valida `X-Twilio-Signature`, consulta el agente y responde al remitente. Configura el webhook POST en:
-
-```text
-https://TU_DOMINIO_DE_VERCEL/api/whatsapp
+```bash
+npm run test:e2e:demo
 ```
+
+Al finalizar se generan el video, subtítulos, capturas finales y el reporte de integridad visual en [`docs/evidence/`](docs/evidence/README.md):
+
+- Video: `docs/evidence/videos/erp-demo-mode-e2e.webm`
+- Subtítulos: `docs/evidence/videos/erp-demo-mode-e2e.srt`
+- Capturas: `docs/evidence/screenshots/final/`
+- Reporte: `docs/evidence/visual-audit.md`
+
+## 📄 Informe ejecutivo
+
+Documento de avance dirigido al dueño del supermercado, enfocado en beneficios operativos, capacidades actuales y siguientes etapas.
+
+[Ver PDF ejecutivo](https://drive.google.com/file/d/1YLYgbnqHulY7gH6ri8Egg0p9gNrG0OwJ/view?usp=sharing)
 
 ## Instalación local
 
 ```bash
+git clone https://github.com/Branduwu/prueba-tecnica-davinci.vercel.app.git
+cd prueba-tecnica-davinci.vercel.app
 npm install
-copy .env.example .env.local
+```
+
+### Modo demo
+
+Para ejecutar el ERP sin Supabase, crea un archivo `.env.local` ignorado por Git:
+
+```env
+NEXT_PUBLIC_DEMO_MODE=true
+```
+
+No definas variables de Supabase en este modo. Después inicia la aplicación:
+
+```bash
 npm run dev
 ```
 
-## Variables de entorno
+### Modo Supabase
 
-Consulta `.env.example`. Las variables de Supabase necesarias son:
+Para conectar una instancia real, desactiva el modo demo y define las variables en `.env.local`:
 
 ```env
 NEXT_PUBLIC_DEMO_MODE=false
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_URL=https://<proyecto>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<solo-servidor>
 ```
 
-Para una demo pública sin Supabase, configura únicamente `NEXT_PUBLIC_DEMO_MODE=true` y vuelve a desplegar. Si existen URL y Publishable Key válidas de Supabase, la aplicación usa Supabase y el modo demo no se activa.
+La clave de servicio sólo se usa en el servidor y no debe publicarse. Consulta [`.env.example`](.env.example) para el inventario completo de variables opcionales de IA y WhatsApp.
 
-Para Twilio se requieren `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` y `TWILIO_WHATSAPP_TO`. Mantén todas las credenciales fuera de Git; `.env.local` está ignorado.
+## Supabase y seguridad
 
-## Migraciones
+Las migraciones están en [`supabase/migrations/`](supabase/migrations/) y se aplican en este orden:
 
-Ejecuta en este orden:
+1. `001_initial_schema.sql`: tablas, relaciones, funciones y bases de seguridad.
+2. `002_security_and_profile_fixes.sql`: perfiles, roles y ajustes de seguridad.
+3. `003_inventory_adjustment_validation.sql`: validaciones de ajustes e inventario.
 
-1. `supabase/migrations/001_initial_schema.sql`
-2. `supabase/migrations/002_security_and_profile_fixes.sql`
-3. `supabase/migrations/003_inventory_adjustment_validation.sql`
+El modelo incluye `profiles`, `products`, `sales`, `sale_items`, `inventory_movements` y `expenses`. Las políticas RLS limitan las operaciones administrativas, mantienen consulta de inventario para cajeros y protegen la información financiera. La RPC `complete_sale` centraliza la venta, los items y el descuento de stock.
 
-Después puedes ejecutar `supabase/seed.sql` para datos mínimos de desarrollo.
+## Catálogo CSV
 
-## Carga CSV
-
-El catálogo completo está en `data/productos_supermercado.csv` y contiene 100 registros. En Inventario, como administrador, selecciona el archivo. El importador exige exactamente:
+El importador usa Papa Parse y acepta exactamente estas columnas:
 
 ```text
 sku,producto,categoria,unidad,precio,stock
 ```
 
-Usa Papa Parse, valida datos, detecta SKU duplicados del archivo y hace upsert por SKU. Una segunda importación actualiza el catálogo sin crear duplicados.
+La importación valida datos, muestra errores y realiza UPSERT por SKU para no duplicar productos. El archivo oficial puede colocarse en `data/productos_supermercado.csv` antes de importarlo desde Inventario.
 
-## Deploy Vercel
+## IA y WhatsApp
 
-1. Importa el repositorio GitHub en Vercel con preset **Next.js**.
-2. Para el entorno conectado agrega las variables de `.env.example` en Production; para el modo público autocontenido basta `NEXT_PUBLIC_DEMO_MODE=true`. No copies `.env.local`.
-3. Despliega y usa el dominio resultante para Supabase Auth y el webhook Twilio.
-4. Verifica `npm run lint` y `npm run build` antes de cada despliegue.
+El agente usa herramientas internas predefinidas para consultar datos de negocio; no genera SQL arbitrario. Las variables `AI_PROVIDER_API_KEY`, `AI_PROVIDER_URL`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` y `TWILIO_WHATSAPP_TO` son opcionales y deben permanecer exclusivamente en el servidor.
 
-## Sobre el modo Demo
+La pantalla de WhatsApp de la demo es una simulación honesta del flujo; no afirma que exista una conexión Twilio activa.
 
-- Permite evaluar login, roles, catálogo oficial de 100 productos, POS, inventario, finanzas, agente y chat de WhatsApp sin credenciales externas.
-- Los productos, ventas, movimientos y gastos se almacenan en `localStorage` del navegador; **Restablecer datos demo** recupera el catálogo y elimina la operación local.
-- La integración real con Supabase permanece disponible para un entorno conectado y tiene prioridad cuando sus variables públicas están configuradas.
-- El agente es determinista y el panel de WhatsApp es una simulación visual: no se conecta a un proveedor IA ni a Twilio.
+## Despliegue
 
-## Decisiones técnicas
+El proyecto se despliega como Next.js en Vercel. Para la demo pública se utiliza:
 
-- PostgreSQL concentra la transacción de venta para evitar inventario inconsistente.
-- RLS protege el acceso por rol y el cliente no conoce la Service Role.
-- Papa Parse evita el parseo manual incorrecto de CSV con valores entrecomillados.
-- El agente sólo invoca consultas conocidas, no SQL arbitrario.
-- La UI prioriza un flujo directo para cajero y no incorpora librerías de componentes pesadas.
+```env
+NEXT_PUBLIC_DEMO_MODE=true
+```
 
-## Seguridad
+Para una instalación conectada a Supabase, configura las variables correspondientes en Vercel sin versionar archivos `.env.local`, claves de servicio, tokens de Twilio ni claves de IA.
 
-- `SUPABASE_SERVICE_ROLE_KEY`, Twilio Auth Token y claves IA son sólo de servidor.
-- `.env.local`, `.next` y `node_modules` están ignorados por Git.
-- `/api/ai` exige JWT de administrador.
-- `/api/whatsapp` valida la firma de Twilio.
+## Limitaciones y siguientes etapas
 
-## Limitaciones
-
-- La integración real de Supabase, Twilio y Vercel requiere configurar cuentas externas.
-- No incluye facturación fiscal, impresora física dedicada ni corte de caja.
-- El proveedor LLM externo está reservado; las preguntas de negocio actuales usan enrutamiento determinista y seguro.
-
-## Mejoras futuras
-
-- Corte y cierre de caja por turno.
-- Compras, proveedores, mermas y caducidades.
-- Promociones, descuentos y reportes gráficos.
-- Integración LLM configurable para consultas de lenguaje más abierto.
-
-## Prueba rápida
-
-1. Inicia sesión como administrador e importa el CSV.
-2. Vende `0.750 kg` de Tomate saladet y confirma ticket, stock y movimiento.
-3. Registra un gasto y revisa flujo/top productos.
-4. Inicia como cajero y confirma que `/finanzas` redirige a POS.
-5. Configura Twilio y consulta ventas o stock por WhatsApp.
+- La demo pública conserva los cambios sólo en el navegador del evaluador.
+- La activación real de Supabase Cloud, proveedor de IA y Twilio requiere sus propias credenciales y configuración externa.
+- Como siguiente etapa se pueden integrar reportes exportables, administración de usuarios y pruebas E2E contra un entorno productivo controlado.
